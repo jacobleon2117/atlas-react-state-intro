@@ -1,15 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { CourseContext } from "./App";
 
 export default function SchoolCatalog() {
   const [courses, setCourses] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "ascending",
   });
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const ITEMS_PER_PAGE = 5;
+
+  const { enrolledCourses, enrollCourse } = useContext(CourseContext);
+
+  const isEnrolled = (courseNumber) => {
+    return enrolledCourses.some(
+      (course) => course.courseNumber === courseNumber
+    );
+  };
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -77,6 +88,22 @@ export default function SchoolCatalog() {
     return "";
   };
 
+  const handleNextPage = () => {
+    setCurrentPage((prev) => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => prev - 1);
+  };
+
+  const startIndex = currentPage * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(sortedCourses.length / ITEMS_PER_PAGE);
+  const isFirstPage = currentPage === 0;
+  const isLastPage = currentPage === totalPages - 1 || totalPages === 0;
+
+  const currentCourses = sortedCourses.slice(startIndex, endIndex);
+
   if (error) {
     return (
       <div className="school-catalog">
@@ -141,7 +168,7 @@ export default function SchoolCatalog() {
           </tr>
         </thead>
         <tbody>
-          {sortedCourses.map((course) => (
+          {currentCourses.map((course) => (
             <tr key={course.courseNumber}>
               <td>{course.trimester}</td>
               <td>{course.courseNumber}</td>
@@ -149,15 +176,24 @@ export default function SchoolCatalog() {
               <td>{course.semesterCredits}</td>
               <td>{course.totalClockHours}</td>
               <td>
-                <button>Enroll</button>
+                <button
+                  onClick={() => enrollCourse(course)}
+                  disabled={isEnrolled(course.courseNumber)}
+                >
+                  {isEnrolled(course.courseNumber) ? "Enrolled" : "Enroll"}
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="pagination">
-        <button>Previous</button>
-        <button>Next</button>
+        <button onClick={handlePrevPage} disabled={isFirstPage}>
+          Previous
+        </button>
+        <button onClick={handleNextPage} disabled={isLastPage}>
+          Next
+        </button>
       </div>
     </div>
   );
