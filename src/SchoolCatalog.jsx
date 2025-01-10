@@ -4,6 +4,7 @@ export default function SchoolCatalog() {
   const [courses, setCourses] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -24,6 +25,13 @@ export default function SchoolCatalog() {
     fetchCourses();
   }, []);
 
+  const filteredCourses = courses.filter((course) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      course.courseNumber.toLowerCase().includes(search) ||
+      course.courseName.toLowerCase().includes(search)
+    );
+  });
   if (error) {
     return (
       <div className="school-catalog">
@@ -32,7 +40,6 @@ export default function SchoolCatalog() {
       </div>
     );
   }
-
   if (isLoading) {
     return (
       <div className="school-catalog">
@@ -45,7 +52,12 @@ export default function SchoolCatalog() {
   return (
     <div className="school-catalog">
       <h1>School Catalog</h1>
-      <input type="text" placeholder="Search" />
+      <input
+        type="text"
+        placeholder="Search"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
       <table>
         <thead>
           <tr>
@@ -58,7 +70,7 @@ export default function SchoolCatalog() {
           </tr>
         </thead>
         <tbody>
-          {courses.map((course) => (
+          {filteredCourses.map((course) => (
             <tr key={course.courseNumber}>
               <td>{course.trimester}</td>
               <td>{course.courseNumber}</td>
